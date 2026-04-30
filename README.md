@@ -1,64 +1,54 @@
-bplist-creator
-==============
+# @appdmg/bplist-creator
 
-Binary Mac OS X Plist (property list) creator.
+Binary macOS plist creator for the appdmg package family.
+
+This package is a CommonJS-first modernization of `bplist-creator` for
+Node.js 24 and newer. The public API remains the same shape: require the
+package as a function, pass a JavaScript value, and receive a `Buffer`
+containing a binary plist.
 
 ## Installation
 
 ```bash
-$ npm install bplist-creator
+npm install @appdmg/bplist-creator
 ```
 
-## Quick Examples
+## Usage
 
 ```javascript
-var bplist = require('bplist-creator');
+const bplist = require('@appdmg/bplist-creator');
 
-var buffer = bplist({
+const buffer = bplist({
   key1: [1, 2, 3]
 });
 ```
 
-## Real/Double/Float handling
+## Real Values
 
-Javascript don't have different types for `1` and `1.0`. This package
-will automatically store numbers as the appropriate type, but can't
-detect floats that is also integers.
-
-If you need to force a value to be written with the `real` type pass
-an instance of `Real`.
+JavaScript uses one `number` type for both integer and floating-point values.
+This package writes integer-looking numbers as binary plist integers. To force a
+value to be written as a binary plist real, wrap it in `Real`.
 
 ```javascript
-var buffer = bplist({
+const bplist = require('@appdmg/bplist-creator');
+
+const buffer = bplist({
   backgroundRed: new bplist.Real(1),
   backgroundGreen: new bplist.Real(0),
   backgroundBlue: new bplist.Real(0)
 });
 ```
 
-In `xml` the corresponding tags is `<integer>` and `<real>`.
+## Migration Notes
+
+The package name changed from `bplist-creator` to
+`@appdmg/bplist-creator`.
+
+The supported runtime changed to Node.js 24 and newer.
+
+The runtime dependency on `stream-buffers` was removed. Output remains covered by
+byte-for-byte binary plist fixture tests.
 
 ## License
 
-(The MIT License)
-
-Copyright (c) 2012 Near Infinity Corporation
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+MIT

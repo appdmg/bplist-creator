@@ -1,28 +1,42 @@
 {
-  "name": "bplist-creator",
-  "version": "0.1.1",
-  "description": "Binary Mac OS X Plist (property list) creator.",
+  "name": "@appdmg/bplist-creator",
+  "version": "1.0.0",
+  "description": "Binary macOS plist creator for appdmg packages.",
   "main": "bplistCreator.js",
+  "types": "bplistCreator.d.ts",
+  "files": [
+    "bplistCreator.js",
+    "bplistCreator.d.ts",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "test": "./node_modules/nodeunit/bin/nodeunit test"
+    "test": "ava"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/nearinfinity/node-bplist-creator.git"
+    "url": "git+https://github.com/appdmg/bplist-creator.git"
   },
+  "bugs": {
+    "url": "https://github.com/appdmg/bplist-creator/issues"
+  },
+  "homepage": "https://github.com/appdmg/bplist-creator#readme",
   "keywords": [
     "bplist",
     "plist",
-    "creator"
+    "creator",
+    "appdmg"
   ],
   "author": "Joe Ferner",
   "license": "MIT",
   "devDependencies": {
-    "bplist-parser": "0.3.0",
-    "is-buffer": "1.1.x",
-    "nodeunit": "0.9.x"
+    "ava": "~8.0.0",
+    "bplist-parser": "~0.3.2"
   },
-  "dependencies": {
-    "stream-buffers": "2.2.x"
+  "overrides": {
+    "js-yaml": "~3.14.2"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }
