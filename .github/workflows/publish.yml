@@ -1,0 +1,72 @@
+name: publish
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+  artifact-metadata: write
+
+jobs:
+  publish:
+    name: publish to npmjs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v6
+
+      - name: setup node 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      - name: verify publish toolchain
+        run: |
+          node --version
+          npm --version
+          node -e "const version = require('node:child_process').execFileSync('npm', ['--version'], { encoding: 'utf8' }).trim(); const [major, minor, patch] = version.split('.').map(Number); if (major < 11 || (major === 11 && (minor < 5 || (minor === 5 && patch < 1)))) throw new Error('npm 11.5.1 or newer is required for trusted publishing')"
+
+      - name: install dependencies
+        run: npm ci
+
+      - name: run tests
+        run: npm test
+
+      - name: audit dependencies
+        run: npm audit --audit-level=moderate
+
+      - name: verify runtime dependency tree
+        run: npm ls --omit=dev --all
+
+      - name: pack package
+        id: pack
+        run: |
+          mkdir -p dist
+          npm pack --json --pack-destination dist > dist/pack.json
+          tarball="$(find dist -maxdepth 1 -name '*.tgz' -print -quit)"
+          test -n "$tarball"
+          echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
+
+      - name: attest npm package artifact
+        uses: actions/attest@v4
+        with:
+          subject-path: ${{ steps.pack.outputs.tarball }}
+
+      - name: upload npm package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-package
+          path: ${{ steps.pack.outputs.tarball }}
+          if-no-files-found: error
+
+      - name: publish package
+        run: npm publish "$TARBALL" --provenance --access public
+        env:
+          TARBALL: ${{ steps.pack.outputs.tarball }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
