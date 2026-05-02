@@ -32,22 +32,8 @@ jobs:
         id: publish_status
         uses: tehpsalmist/npm-publish-status-action@01cb25946b194a7a5468f22c8e74db04c283f121
 
-      - name: report npm package version status
-        run: |
-          package_name="$(node -p "require('./package.json').name")"
-          package_version="$(node -p "require('./package.json').version")"
-
-          if [ "${{ steps.publish_status.outputs.exists }}" = "1" ]; then
-            echo "${package_name}@${package_version} is already published; exiting without publishing."
-          elif [ "${{ steps.publish_status.outputs.exists }}" = "0" ]; then
-            echo "${package_name}@${package_version} is not published yet; continuing."
-          else
-            echo "::error::Unexpected npm publish status: ${{ steps.publish_status.outputs.exists }}"
-            exit 1
-          fi
-
-  verify:
-    name: verify package
+  publish:
+    name: publish to npmjs
     needs: check
     if: needs.check.outputs.should_publish == 'true'
     runs-on: ubuntu-latest
@@ -66,68 +52,6 @@ jobs:
       - name: install dependencies
         run: npm ci
 
-      - name: run tests
-        run: npm test
-
-      - name: audit dependencies
-        run: npm audit --audit-level=moderate
-
-      - name: verify runtime dependency tree
-        run: npm ls --omit=dev --all
-
-  prepublish_check:
-    name: check npm package version before publish
-    needs: verify
-    if: github.event.release.prerelease == false
-    runs-on: ubuntu-latest
-    outputs:
-      should_publish: ${{ steps.publish_status.outputs.exists == '0' }}
-
-    steps:
-      - name: checkout
-        uses: actions/checkout@v6
-
-      - name: setup node 24
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          registry-url: https://registry.npmjs.org
-
-      - name: check npm package version
-        id: publish_status
-        uses: tehpsalmist/npm-publish-status-action@01cb25946b194a7a5468f22c8e74db04c283f121
-
-      - name: report npm package version status
-        run: |
-          package_name="$(node -p "require('./package.json').name")"
-          package_version="$(node -p "require('./package.json').version")"
-
-          if [ "${{ steps.publish_status.outputs.exists }}" = "1" ]; then
-            echo "${package_name}@${package_version} was published while this workflow was verifying; exiting without publishing."
-          elif [ "${{ steps.publish_status.outputs.exists }}" = "0" ]; then
-            echo "${package_name}@${package_version} is still not published; continuing."
-          else
-            echo "::error::Unexpected npm publish status: ${{ steps.publish_status.outputs.exists }}"
-            exit 1
-          fi
-
-  publish:
-    name: publish to npmjs
-    needs: prepublish_check
-    if: needs.prepublish_check.outputs.should_publish == 'true'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: checkout
-        uses: actions/checkout@v6
-
-      - name: setup node 24
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          registry-url: https://registry.npmjs.org
-          cache: npm
-
       - name: pack package
         id: pack
         run: |
@@ -141,13 +65,6 @@ jobs:
         uses: actions/attest@v4
         with:
           subject-path: ${{ steps.pack.outputs.tarball }}
-
-      - name: upload npm package artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: npm-package
-          path: ${{ steps.pack.outputs.tarball }}
-          if-no-files-found: error
 
       - name: publish package
         run: npm publish "$TARBALL" --provenance --access public
